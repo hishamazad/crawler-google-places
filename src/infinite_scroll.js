@@ -66,8 +66,6 @@ module.exports = async (page, maxHeight, elementToScroll = 'body', scrollName, n
     await page.waitForSelector(elementToScroll, { timeout: defaultElementTimeout });
     const scrollInfo = await getPageScrollInfo(page, elementToScroll);
 
-    let previousReviewsCount = 0;
-    // NOTE: In can there are too many reviews like 5K plus. The infinite scroll stops working, but the loader is still there.
     // This unsure that we stop it after 5 tries
     let triesWithJustLoader = 0;
     while (true) {
@@ -93,21 +91,9 @@ module.exports = async (page, maxHeight, elementToScroll = 'body', scrollName, n
                 const loader = $('.section-loading-spinner');
                 if (loader) return loader.parent().attr('style') !== 'display: none;';
             });
-
-            const reviewsCount = await page.evaluate(() => $('div.section-review').length);
             /**
              *  If the page is scrolled to the very bottom or beyond
-             *  maximum height and loader is not displayed and we don't find new reviews, we are done.
              */
-            if (reviewsCount === previousReviewsCount
-                    && (scrollInfo.scrollTop + scrollInfo.clientHeight >= Math.min(scrollInfo.scrollHeight, maxHeight))
-                    && (!scrollInfo.isLoaderOnPage || triesWithJustLoader > numberOfRetries)
-            ) break;
-            if (reviewsCount === previousReviewsCount
-                && (scrollInfo.scrollTop + scrollInfo.clientHeight >= Math.min(scrollInfo.scrollHeight, maxHeight))) {
-                ++triesWithJustLoader;
-            }
-            previousReviewsCount = reviewsCount;
 
             log.debug(`Infinite scroll stats (${stringifyScrollInfo(scrollInfo)} resourcesStats=${JSON.stringify(resourcesStats)}).`);
 
