@@ -16,45 +16,46 @@ const { log, sleep } = Apify.utils;
  */
 module.exports.extractPageData = async ({ page }) => {
     return page.evaluate((placeTitleSel) => {
-        const address = $('[data-section-id="ad"] .section-info-line').text().trim();
-        const addressAlt = $("button[data-tooltip*='address']").text().trim();
-        const addressAlt2 = $("button[data-item-id*='address']").text().trim();
-        const secondaryAddressLine = $('[data-section-id="ad"] .section-info-secondary-text').text().replace('Located in:', '').trim();
-        const secondaryAddressLineAlt = $("button[data-tooltip*='locatedin']").text().replace('Located in:', '').trim();
-        const secondaryAddressLineAlt2 = $("button[data-item-id*='locatedin']").text().replace('Located in:', '').trim();
-        const phone = $('[data-section-id="pn0"].section-info-speak-numeral').length
-            ? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
-            : $("button[data-tooltip*='phone']").text().trim();
-        const phoneAlt = $('button[data-item-id*=phone]').text().trim();
-        let temporarilyClosed = false;
-        let permanentlyClosed = false;
-        const altOpeningHoursText = $('[class*="section-info-hour-text"] [class*="section-info-text"]').text().trim();
-        if (altOpeningHoursText === 'Temporarily closed') temporarilyClosed = true;
-        else if (altOpeningHoursText === 'Permanently closed') permanentlyClosed = true;
 		const categoryNamedata =  $('[jsaction="pane.rating.category"]').text().trim();
 		
-			if (categoryNamedata === 'Construction company'){
-				categoryName = 'Construction company';
-			}
-			
-        return {
-            title: $(placeTitleSel).text().trim(),
-            subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
-            totalScore: $('span.section-star-display').eq(0).text().trim(),
-            categoryName,
-            address: address || addressAlt || addressAlt2 || null,
-            locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
-            plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
-                || $("button[data-tooltip*='plus code']").text().trim()
-                || $("button[data-item-id*='oloc']").text().trim() || null,
-            website: $('[data-section-id="ap"]').length
-                ? $('[data-section-id="ap"]').eq('0').text().trim()
-                : $("button[data-tooltip*='website']").text().trim()
-                || $("button[data-item-id*='authority']").text().trim() || null,
-            phone: phone || phoneAlt || null,
-            temporarilyClosed,
-            permanentlyClosed,
-        };
+		if (categoryNamedata === 'Construction company'){
+			categoryName = 'Construction company';
+				
+			const address = $('[data-section-id="ad"] .section-info-line').text().trim();
+			const addressAlt = $("button[data-tooltip*='address']").text().trim();
+			const addressAlt2 = $("button[data-item-id*='address']").text().trim();
+			const secondaryAddressLine = $('[data-section-id="ad"] .section-info-secondary-text').text().replace('Located in:', '').trim();
+			const secondaryAddressLineAlt = $("button[data-tooltip*='locatedin']").text().replace('Located in:', '').trim();
+			const secondaryAddressLineAlt2 = $("button[data-item-id*='locatedin']").text().replace('Located in:', '').trim();
+			const phone = $('[data-section-id="pn0"].section-info-speak-numeral').length
+				? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
+				: $("button[data-tooltip*='phone']").text().trim();
+			const phoneAlt = $('button[data-item-id*=phone]').text().trim();
+			let temporarilyClosed = false;
+			let permanentlyClosed = false;
+			const altOpeningHoursText = $('[class*="section-info-hour-text"] [class*="section-info-text"]').text().trim();
+			if (altOpeningHoursText === 'Temporarily closed') temporarilyClosed = true;
+			else if (altOpeningHoursText === 'Permanently closed') permanentlyClosed = true;
+			return {
+				title: $(placeTitleSel).text().trim(),
+				subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
+				totalScore: $('span.section-star-display').eq(0).text().trim(),
+				categoryName,
+				address: address || addressAlt || addressAlt2 || null,
+				locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
+				plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
+					|| $("button[data-tooltip*='plus code']").text().trim()
+					|| $("button[data-item-id*='oloc']").text().trim() || null,
+				website: $('[data-section-id="ap"]').length
+					? $('[data-section-id="ap"]').eq('0').text().trim()
+					: $("button[data-tooltip*='website']").text().trim()
+					|| $("button[data-item-id*='authority']").text().trim() || null,
+				phone: phone || phoneAlt || null,
+				temporarilyClosed,
+				permanentlyClosed,
+			};
+		
+		}
     }, PLACE_TITLE_SEL);
 }
 
