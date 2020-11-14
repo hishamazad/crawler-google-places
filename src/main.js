@@ -33,15 +33,13 @@ Apify.main(async () => {
         walker,
 
         // Scraping options
-        includeHistogram = false, includeOpeningHours = false, includePeopleAlsoSearch = false,
-        maxReviews, maxImages, exportPlaceUrls = false, additionalInfo = false, maxCrawledPlaces,
-        maxAutomaticZoomOut, cachePlaces = false, reviewsSort = 'mostRelevant',
+        includeHistogram = false, includeOpeningHours = false, includePeopleAlsoSearch = false, maxImages, exportPlaceUrls = false, additionalInfo = false, maxCrawledPlaces,
+        maxAutomaticZoomOut, cachePlaces = false,
     } = input;
 
     const scrapingOptions = {
-        includeHistogram, includeOpeningHours, includePeopleAlsoSearch,
-        maxReviews, maxImages, exportPlaceUrls, additionalInfo, maxCrawledPlaces,
-        maxAutomaticZoomOut, cachePlaces, reviewsSort, language,
+        includeHistogram, includeOpeningHours, includePeopleAlsoSearch, maxImages, exportPlaceUrls, additionalInfo, maxCrawledPlaces,
+        maxAutomaticZoomOut, cachePlaces, language,
     };
 
     if (debug) {
