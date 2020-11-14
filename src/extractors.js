@@ -16,40 +16,33 @@ const { log, sleep } = Apify.utils;
  */
 module.exports.extractPageData = async ({ page }) => {
     return page.evaluate((placeTitleSel) => {
-		const categoryNamedata = $('[jsaction="pane.rating.category"]').text().trim();
-		const titledata = $(placeTitleSel).text().trim();
-				
-		if (categoryNamedata === 'Construction company'|| titledata != ''){
-			categoryName = 'Construction company';
-				
-			const address = $('[data-section-id="ad"] .section-info-line').text().trim();
-			const addressAlt = $("button[data-tooltip*='address']").text().trim();
-			const addressAlt2 = $("button[data-item-id*='address']").text().trim();
-			const secondaryAddressLine = $('[data-section-id="ad"] .section-info-secondary-text').text().replace('Located in:', '').trim();
-			const secondaryAddressLineAlt = $("button[data-tooltip*='locatedin']").text().replace('Located in:', '').trim();
-			const secondaryAddressLineAlt2 = $("button[data-item-id*='locatedin']").text().replace('Located in:', '').trim();
-			const phone = $('[data-section-id="pn0"].section-info-speak-numeral').length
-				? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
-				: $("button[data-tooltip*='phone']").text().trim();
-			const phoneAlt = $('button[data-item-id*=phone]').text().trim();
-			return {
-				titledata,
-				subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
-				//totalScore: $('span.section-star-display').eq(0).text().trim(),
-				categoryName,
-				address: address || addressAlt || addressAlt2 || null,
-				locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
-				plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
-					|| $("button[data-tooltip*='plus code']").text().trim()
-					|| $("button[data-item-id*='oloc']").text().trim() || null,
-				website: $('[data-section-id="ap"]').length
-					? $('[data-section-id="ap"]').eq('0').text().trim()
-					: $("button[data-tooltip*='website']").text().trim()
-					|| $("button[data-item-id*='authority']").text().trim() || null,
-				phone: phone || phoneAlt || null,
-			};
-		return false
-		} 
+        const address = $('[data-section-id="ad"] .section-info-line').text().trim();
+        const addressAlt = $("button[data-tooltip*='address']").text().trim();
+        const addressAlt2 = $("button[data-item-id*='address']").text().trim();
+        const secondaryAddressLine = $('[data-section-id="ad"] .section-info-secondary-text').text().replace('Located in:', '').trim();
+        const secondaryAddressLineAlt = $("button[data-tooltip*='locatedin']").text().replace('Located in:', '').trim();
+        const secondaryAddressLineAlt2 = $("button[data-item-id*='locatedin']").text().replace('Located in:', '').trim();
+        const phone = $('[data-section-id="pn0"].section-info-speak-numeral').length
+            ? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
+            : $("button[data-tooltip*='phone']").text().trim();
+        const phoneAlt = $('button[data-item-id*=phone]').text().trim();
+
+        return {
+            title: $(placeTitleSel).text().trim(),
+            subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
+            //totalScore: $('span.section-star-display').eq(0).text().trim(),
+            categoryName: $('[jsaction="pane.rating.category"]').text().trim(),
+            address: address || addressAlt || addressAlt2 || null,
+            locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
+            plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
+                || $("button[data-tooltip*='plus code']").text().trim()
+                || $("button[data-item-id*='oloc']").text().trim() || null,
+            website: $('[data-section-id="ap"]').length
+                ? $('[data-section-id="ap"]').eq('0').text().trim()
+                : $("button[data-tooltip*='website']").text().trim()
+                || $("button[data-item-id*='authority']").text().trim() || null,
+            phone: phone || phoneAlt || null,
+        };
     }, PLACE_TITLE_SEL);
 }
 
