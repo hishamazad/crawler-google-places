@@ -4,11 +4,11 @@ const Puppeteer = require('puppeteer'); // eslint-disable-line no-unused-vars
 const Globalize = require('globalize');
 
 const { extractPageData, extractPopularTimes, extractOpeningHours, extractPeopleAlsoSearch,
-    extractAdditionalInfo, extractReviews, extractImages } = require('./extractors');
+    extractAdditionalInfo, extractImages } = require('./extractors');
 const { DEFAULT_TIMEOUT, PLACE_TITLE_SEL } = require('./consts');
 const { enqueueAllPlaceDetails } = require('./enqueue_places_crawler');
 const {
-    saveHTML, saveScreenshot, waitForGoogleMapLoader, waitAndHandleConsentFrame, waiter,
+    saveHTML, waitForGoogleMapLoader, waitAndHandleConsentFrame, waiter,
 } = require('./utils');
 const { checkInPolygon } = require('./polygon');
 
@@ -30,20 +30,18 @@ Globalize.load(require('cldr-data').entireMainFor(...DEFAULT_CRAWLER_LOCALIZATIO
  *  includeHistogram: boolean,
  *  includeOpeningHours: boolean,
  *  includePeopleAlsoSearch: boolean,
- *  maxReviews: number,
  *  maxImages: number,
  *  additionalInfo: boolean,
  *  geo: any,
  *  cachePlaces: boolean,
  *  allPlaces: {[index: string]: any},
- *  reviewsSort: string,
  *  session: Apify.Session,
  * }} options
  */
 const extractPlaceDetail = async (options) => {
     const {
         page, request, searchString, includeHistogram, includeOpeningHours,
-        includePeopleAlsoSearch, maxReviews, maxImages, additionalInfo, geo, cachePlaces, allPlaces, reviewsSort,
+        includePeopleAlsoSearch, maxImages, additionalInfo, geo, cachePlaces, allPlaces,
         session,
     } = options;
     // Extract basic information
@@ -93,7 +91,6 @@ const extractPlaceDetail = async (options) => {
         openingHours: includeOpeningHours ? await extractOpeningHours({ page }) : undefined,
         peopleAlsoSearch: includePeopleAlsoSearch ? await extractPeopleAlsoSearch({ page }) : undefined,
         additionalInfo: additionalInfo ? await extractAdditionalInfo({ page }) : undefined,
-        ...await extractReviews({ page, totalScore: pageData.totalScore, maxReviews, reviewsSort }),
         imageUrls: await extractImages({ page, maxImages })
     };
 
@@ -102,9 +99,8 @@ const extractPlaceDetail = async (options) => {
 
 const setUpCrawler = (crawlerOptions, scrapingOptions, stats, allPlaces) => {
     const {
-        includeHistogram, includeOpeningHours, includePeopleAlsoSearch,
-        maxReviews, maxImages, exportPlaceUrls, additionalInfo, maxCrawledPlaces,
-        maxAutomaticZoomOut, cachePlaces, reviewsSort, language, multiplier,
+        includeHistogram, includeOpeningHours, includePeopleAlsoSearch, maxImages, exportPlaceUrls, additionalInfo, maxCrawledPlaces,
+        maxAutomaticZoomOut, cachePlaces, language, multiplier,
     } = scrapingOptions;
     const { requestQueue } = crawlerOptions;
     return new Apify.PuppeteerCrawler({
@@ -186,13 +182,11 @@ const setUpCrawler = (crawlerOptions, scrapingOptions, stats, allPlaces) => {
                         includeHistogram,
                         includeOpeningHours,
                         includePeopleAlsoSearch,
-                        maxReviews,
                         maxImages,
                         additionalInfo,
                         geo,
                         cachePlaces,
                         allPlaces,
-                        reviewsSort,
                         session,
                     });
                     if (placeDetail) {
@@ -220,7 +214,6 @@ const setUpCrawler = (crawlerOptions, scrapingOptions, stats, allPlaces) => {
                 // Let's refresh IP using browser refresh.
                 if (log.getLevel() === log.LEVELS.DEBUG) {
                     await saveHTML(page, `${request.id}.html`);
-                    await saveScreenshot(page, `${request.id}.png`);
                 }
                 await puppeteerPool.retire(page.browser());
                 if (request.retryCount < crawlerOptions.maxRequestRetries && log.getLevel() !== log.LEVELS.DEBUG) {
