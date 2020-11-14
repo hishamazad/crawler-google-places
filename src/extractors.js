@@ -16,7 +16,7 @@ const { log, sleep } = Apify.utils;
  */
 module.exports.extractPageData = async ({ page }) => {
     return page.evaluate((placeTitleSel) => {
-		const categoryNamedata =  $('[jsaction="pane.rating.category"]').text().trim();
+		const categoryNamedata = $('[jsaction="pane.rating.category"]').text().trim();
 		
 		if (categoryNamedata === 'Construction company'){
 			categoryName = 'Construction company';
@@ -54,8 +54,8 @@ module.exports.extractPageData = async ({ page }) => {
 				temporarilyClosed,
 				permanentlyClosed,
 			};
-		
-		}
+		return false
+		} 
     }, PLACE_TITLE_SEL);
 }
 
