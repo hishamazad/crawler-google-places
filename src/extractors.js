@@ -17,8 +17,9 @@ const { log, sleep } = Apify.utils;
 module.exports.extractPageData = async ({ page }) => {
     return page.evaluate((placeTitleSel) => {
 		const categoryNamedata = $('[jsaction="pane.rating.category"]').text().trim();
-		
-		if (categoryNamedata === 'Construction company'){
+		const titledata = $(placeTitleSel).text().trim();
+				
+		if (categoryNamedata === 'Construction company'|| titledata != ''){
 			categoryName = 'Construction company';
 				
 			const address = $('[data-section-id="ad"] .section-info-line').text().trim();
@@ -31,15 +32,10 @@ module.exports.extractPageData = async ({ page }) => {
 				? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
 				: $("button[data-tooltip*='phone']").text().trim();
 			const phoneAlt = $('button[data-item-id*=phone]').text().trim();
-			let temporarilyClosed = false;
-			let permanentlyClosed = false;
-			const altOpeningHoursText = $('[class*="section-info-hour-text"] [class*="section-info-text"]').text().trim();
-			if (altOpeningHoursText === 'Temporarily closed') temporarilyClosed = true;
-			else if (altOpeningHoursText === 'Permanently closed') permanentlyClosed = true;
 			return {
-				title: $(placeTitleSel).text().trim(),
+				titledata,
 				subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
-				totalScore: $('span.section-star-display').eq(0).text().trim(),
+				//totalScore: $('span.section-star-display').eq(0).text().trim(),
 				categoryName,
 				address: address || addressAlt || addressAlt2 || null,
 				locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
@@ -51,8 +47,6 @@ module.exports.extractPageData = async ({ page }) => {
 					: $("button[data-tooltip*='website']").text().trim()
 					|| $("button[data-item-id*='authority']").text().trim() || null,
 				phone: phone || phoneAlt || null,
-				temporarilyClosed,
-				permanentlyClosed,
 			};
 		return false
 		} 
