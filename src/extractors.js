@@ -31,12 +31,17 @@ module.exports.extractPageData = async ({ page }) => {
         const altOpeningHoursText = $('[class*="section-info-hour-text"] [class*="section-info-text"]').text().trim();
         if (altOpeningHoursText === 'Temporarily closed') temporarilyClosed = true;
         else if (altOpeningHoursText === 'Permanently closed') permanentlyClosed = true;
-
+		const categoryNamedata =  $('[jsaction="pane.rating.category"]').text().trim();
+		
+			if (categoryNamedata === 'Construction company'){
+				categoryName = 'Construction company';
+			}
+			
         return {
             title: $(placeTitleSel).text().trim(),
             subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
             totalScore: $('span.section-star-display').eq(0).text().trim(),
-            categoryName: $('[jsaction="pane.rating.category"]').text().trim(),
+            categoryName,
             address: address || addressAlt || addressAlt2 || null,
             locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
             plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
