@@ -3,7 +3,7 @@ const Puppeteer = require('puppeteer'); // eslint-disable-line no-unused-vars
 const Globalize = require('globalize');
 
 const { DEFAULT_TIMEOUT, PLACE_TITLE_SEL } = require('./consts');
-const { waitForGoogleMapLoader, parseReviewFromResponseBody, scrollTo, enlargeImageUrls } = require('./utils');
+const { waitForGoogleMapLoader,scrollTo, enlargeImageUrls } = require('./utils');
 const infiniteScroll = require('./infinite_scroll');
 
 const { log, sleep } = Apify.utils;
@@ -209,137 +209,6 @@ module.exports.extractAdditionalInfo = async ({ page }) => {
     return result;
 }
 
-/**
- * totalScore is string because it is parsed via localization
- * @param {{
- *    page: Puppeteer.Page,
- *    totalScore: string,
- *    maxReviews: number,
- *    reviewsSort: string,
- * }} options
- */
-module.exports.extractReviews = async ({ page, totalScore, maxReviews, reviewsSort }) => {
-    const result = {};
-
-    const reviewSortOptions = {
-        mostRelevant: 0,
-        newest: 1,
-        highestRanking: 2,
-        lowestRanking: 3,
-    };
-
-    const reviewsButtonSel = 'button[jsaction="pane.reviewChart.moreReviews"]';
-    if (totalScore) {
-        const { reviewsCountText, localization } = await page.evaluate((selector) => {
-            const numberReviewsText = $(selector).text().trim();
-            // NOTE: Needs handle:
-            // Recenze: 7
-            // 1.609 reviews
-            // 9 reviews
-            const number = numberReviewsText.match(/[.,0-9]+/);
-            return {
-                reviewsCountText: number ? number[0] : null,
-                localization: navigator.language.slice(0, 2),
-            };
-        }, reviewsButtonSel);
-        let globalParser;
-        try {
-            globalParser = Globalize(localization);
-        } catch (e) {
-            throw new Error(`[PLACE]: Can not find localization for ${localization}, try to use different proxy IP.`);
-        }
-        result.totalScore = globalParser.numberParser({ round: 'floor' })(totalScore);
-        result.reviewsCount = reviewsCountText ? globalParser.numberParser({ round: 'truncate' })(reviewsCountText) : null;
-
-        // click the consent iframe, working with arrays so it never fails.
-        // also if there's anything wrong with Same-Origin, just delete the modal contents
-        // TODO: Why is this isolated in reviews?
-        await page.$$eval('#consent-bump iframe', async (frames) => {
-            try {
-                frames.forEach((frame) => {
-                    [...frame.contentDocument.querySelectorAll('#introAgreeButton')].forEach((s) => s.click());
-                });
-            } catch (e) {
-                document.querySelectorAll('#consent-bump > *').forEach((el) => el.remove());
-            }
-        });
-
-        // TODO: Scrape default reviews (will allow us to extract 10 reviews by default without additional clicking)
-        if (typeof maxReviews === 'number' && maxReviews > 0) {
-            result.reviews = [];
-            await page.waitForSelector(reviewsButtonSel);
-            await page.click(reviewsButtonSel);
-            // Set up sort from newest
-            const sortPromise1 = async () => {
-                try {
-                    await page.click('[class*=dropdown-icon]');
-                    await sleep(1000);
-                    for (let i = 0; i < reviewSortOptions[reviewsSort]; i += 1) {
-                        await page.keyboard.press('ArrowDown');
-                    }
-                    await page.keyboard.press('Enter');
-                } catch (e) {
-                    log.debug('[PLACE]: Can not sort reviews with 1 options!');
-                }
-            };
-            const sortPromise2 = async () => {
-                try {
-                    await page.click('button[data-value="Sort"]');
-                    for (let i = 0; i < reviewSortOptions[reviewsSort]; i += 1) {
-                        await page.keyboard.press('ArrowDown');
-                    }
-                    await page.keyboard.press('Enter');
-                } catch (e) {
-                    log.debug('[PLACE]: Can not sort with 2 options!');
-                }
-            };
-            await sleep(5000);
-            const [sort1, sort2, scroll, reviewsResponse] = await Promise.all([
-                sortPromise1(),
-                sortPromise2(),
-                scrollTo(page, '.section-scrollbox.scrollable-y', 10000),
-                page.waitForResponse((response) => response.url().includes('preview/review/listentitiesreviews')),
-            ]);
-
-            const reviewResponseBody = await reviewsResponse.buffer();
-            const reviews = parseReviewFromResponseBody(reviewResponseBody);
-
-            result.reviews.push(...reviews);
-            result.reviews = result.reviews.slice(0, maxReviews);
-            log.info(`[PLACE]: Exracting reviews: ${result.reviews.length}/${maxReviews} --- ${page.url()}`);
-            let reviewUrl = reviewsResponse.url();
-            // Replace !3e1 in URL with !3e2, it makes list sort by newest
-            reviewUrl = reviewUrl.replace(/!3e\d/, '!3e2');
-            // Make sure that we star review from 0, setting !1i0
-            reviewUrl = reviewUrl.replace(/!1i\d+/, '!1i0');
-            const increaseLimitInUrl = (url) => {
-                const numberString = reviewUrl.match(/!1i(\d+)/)[1];
-                const number = parseInt(numberString, 10);
-                return url.replace(/!1i\d+/, `!1i${number + 10}`);
-            };
-
-            while (result.reviews.length < maxReviews) {
-                // Request in browser context to use proxy as in brows
-                const responseBody = await page.evaluate(async (url) => {
-                    const response = await fetch(url);
-                    return await response.text();
-                }, reviewUrl);
-                const reviews = parseReviewFromResponseBody(responseBody);
-                if (reviews.length === 0) {
-                    break;
-                }
-                result.reviews.push(...reviews);
-                result.reviews = result.reviews.slice(0, maxReviews);
-                log.info(`[PLACE]: Exracting reviews: ${result.reviews.length}/${maxReviews} --- ${page.url()}`);
-                reviewUrl = increaseLimitInUrl(reviewUrl);
-            }
-            log.info(`[PLACE]: Reviews extraction finished: ${result.reviews.length} --- ${page.url()}`);
-
-            await page.click('button[jsaction*=back]');
-        }
-    }
-    return result;
-}
 
 /**
  * totalScore is string because it is parsed via localization
