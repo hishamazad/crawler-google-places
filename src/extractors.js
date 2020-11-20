@@ -29,7 +29,7 @@ module.exports.extractPageData = async ({ page }) => {
 		
 		const categoryName = $('[jsaction="pane.rating.category"]').text().trim();
 		
-		if (categoryName === "Schools" || categoryName === "CBSE Schools"){			
+		if (categoryName == "Schools" && categoryName == "CBSE Schools"){			
 		
 			return {
 				title: $(placeTitleSel).text().trim(),
