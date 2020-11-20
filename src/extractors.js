@@ -26,23 +26,30 @@ module.exports.extractPageData = async ({ page }) => {
             ? $('[data-section-id="pn0"].section-info-speak-numeral').attr('data-href').replace('tel:', '')
             : $("button[data-tooltip*='phone']").text().trim();
         const phoneAlt = $('button[data-item-id*=phone]').text().trim();
-
-        return {
-            title: $(placeTitleSel).text().trim(),
-            subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
-            //totalScore: $('span.section-star-display').eq(0).text().trim(),
-            categoryName: $('[jsaction="pane.rating.category"]').text().trim(),
-            address: address || addressAlt || addressAlt2 || null,
-            locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
-            plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
-                || $("button[data-tooltip*='plus code']").text().trim()
-                || $("button[data-item-id*='oloc']").text().trim() || null,
-            website: $('[data-section-id="ap"]').length
-                ? $('[data-section-id="ap"]').eq('0').text().trim()
-                : $("button[data-tooltip*='website']").text().trim()
-                || $("button[data-item-id*='authority']").text().trim() || null,
-            phone: phone || phoneAlt || null,
-        };
+		
+		categoryName = $('[jsaction="pane.rating.category"]').text().trim();
+		
+		if (categoryName === "Schools" || categoryName === "CBSE Schools"){
+			
+		
+			return {
+				title: $(placeTitleSel).text().trim(),
+				subTitle: $('section-hero-header-title-subtitle').first().text().trim() || null,
+				//totalScore: $('span.section-star-display').eq(0).text().trim(),
+				categoryName: $('[jsaction="pane.rating.category"]').text().trim(),
+				address: address || addressAlt || addressAlt2 || null,
+				locatedIn: secondaryAddressLine || secondaryAddressLineAlt || secondaryAddressLineAlt2 || null,
+				plusCode: $('[data-section-id="ol"] .widget-pane-link').text().trim()
+					|| $("button[data-tooltip*='plus code']").text().trim()
+					|| $("button[data-item-id*='oloc']").text().trim() || null,
+				website: $('[data-section-id="ap"]').length
+					? $('[data-section-id="ap"]').eq('0').text().trim()
+					: $("button[data-tooltip*='website']").text().trim()
+					|| $("button[data-item-id*='authority']").text().trim() || null,
+				phone: phone || phoneAlt || null,
+			};
+		}
+		return false;
     }, PLACE_TITLE_SEL);
 }
 
